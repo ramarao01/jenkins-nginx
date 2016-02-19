@@ -36,3 +36,26 @@ service "nginx" do
  action [:enable, :start]
 end
 
+
+execute 'key6' do
+command 'cat /file2 >> /etc/default/jenkins'
+end
+
+execute 'key7' do
+command 'cat /file1 > /etc/nginx/sites-enabled/default'
+end  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
