@@ -2,7 +2,7 @@
 
 #1st command in bash block downloads the key from the http link and adds it to apt-key list
 #2nd command adds link(from which jenkins has to be downloaded) to apt sources.list
-#3rd command will redownload broken packages if any
+#3rd command will redownload broken apt packages if any
 bash 'exe' do
 code <<-EOH
 sudo wget -q -O - https://jenkins-ci.org/debian/jenkins-ci.org.key | sudo apt-key add -
@@ -12,28 +12,37 @@ sudo apt-get update
 EOH
 end
 
+#Download dependency packages for jenkins like jre and jdk
 package "openjdk-7-jre" 
-
 package "openjdk-7-jdk"
 
+
+#This will remove any broken dpkg packages
 execute 'dpkg' do
 command 'sudo dpkg --configure -a'
 end
 
+
+#install jenkins package
 package "jenkins"
 
+#It will enable and start jenkins package
 service "jenkins" do
   supports [:stop, :start, :restart]
   action [:enable, :start]
 end
 
+#install nginx package
 package 'nginx'
 
+#It will enable and install nginx package
 service "nginx" do
  supports status: true
  action [:enable, :start]
 end
 
+#Modify default Nginx configuration file for reverse proxy settings
+#Give permissions to modify the file
 cookbook_file '/etc/nginx/sites-enabled/default' do
 source 'default'
 cookbook 'jenkins-nginx'
@@ -44,6 +53,8 @@ mode '0755'
 action:create
 end
 
+
+#Comment already existed JENKINS_ARGS and add new line  
 bash 'key' do
 code <<-EOH
 sudo chmod 0755 /etc
@@ -51,6 +62,9 @@ sed -i 's/JENKINS_ARGS/#JENKINS_ARGS/' /etc/default/jenkins
 echo 'JENKINS_ARGS="--webroot=/var/cache/jenkins/war --httpListenAddress=192.168.56.103 --httpPort=$HTTP_PORT -ajp13Port=$AJP_PORT"' >> /etc/default/jenkins
 EOH
 end
+
+
+
 keyfile = '/etc/nginx/cert.key'
 crtfile = '/etc/nginx/cert.crt'
 sslconfig = '/etc/nginx/sslcert.conf'
@@ -59,6 +73,8 @@ sslconfig = '/etc/nginx/sslcert.conf'
 
 
 unless File.exists?(keyfile) && File.exists?(crtfile) && File.exists?(sslconfig)
+
+#Generate a 2048-bit RSA key and will store into cert.key file
   file keyfile do
     owner "root"
     group "root"
@@ -66,7 +82,7 @@ unless File.exists?(keyfile) && File.exists?(crtfile) && File.exists?(sslconfig)
     content `/opt/chefdk/embedded/bin/openssl genrsa 2048`
     not_if { File.exists?(keyfile) }
   end
-
+#SSL configuration file which will store all the private data
   file sslconf do
     owner "root"
     group "root"
@@ -87,6 +103,7 @@ unless File.exists?(keyfile) && File.exists?(crtfile) && File.exists?(sslconfig)
   EOH
   end
 
+#Generate a selfsigned Certificate but it will give some browser warnings,need to get an officially signed certificate to getrid of warnings 
   ruby_block "create crtfile" do
     block do
       r = Chef::Resource::File.new(crtfile, run_context)
