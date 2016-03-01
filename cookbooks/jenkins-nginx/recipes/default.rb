@@ -59,7 +59,7 @@ bash 'key' do
 code <<-EOH
 sudo chmod 0755 /etc
 sed -i 's/JENKINS_ARGS/#JENKINS_ARGS/' /etc/default/jenkins 
-echo 'JENKINS_ARGS="--webroot=/var/cache/jenkins/war --httpListenAddress=192.168.56.103 --httpPort=$HTTP_PORT -ajp13Port=$AJP_PORT"' >> /etc/default/jenkins
+echo 'JENKINS_ARGS="--webroot=/var/cache/jenkins/war --httpListenAddress=127.0.0.1 --httpPort=$HTTP_PORT -ajp13Port=$AJP_PORT"' >> /etc/default/jenkins
 EOH
 end
 
@@ -87,7 +87,7 @@ unless File.exists?(keyfile) && File.exists?(crtfile) && File.exists?(sslconfig)
     owner "root"
     group "root"
     mode "0644"
-    not_if { File.exists?(sslconf) }
+    not_if { File.exists?(sslconfig) }
     content <<-EOH
   [ req ]
   distinguished_name = req_distinguished_name
