@@ -35,7 +35,6 @@ end
 #install nginx package
 package 'nginx'
 
-#It will enable and install nginx package
 service "nginx" do
  supports status: true
  action [:enable, :start]
@@ -117,12 +116,18 @@ unless File.exists?(keyfile) && File.exists?(crtfile) && File.exists?(sslconfig)
   end
 end
 
-
-service "nginx" do
- supports status: true
- action [:enable, :start]
-end
+#It will enable and install jenkins package
 service "jenkins" do
   supports [:stop, :start, :restart]
   action [:enable, :start]
 end
+
+#It will enable and install nginx package
+service "nginx" do
+ supports status: true
+ action [:enable, :start]
+end
+
+#It will store sslcrt file and sslkey file details to node details.
+node.default['private_chef']['nginx']['ssl_certificate'] ||= crtfile
+node.default['private_chef']['nginx']['ssl_certificate_key'] ||= keyfile
